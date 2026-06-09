@@ -64,23 +64,7 @@ export default function LoginPage() {
       <div className="flex w-full flex-col lg:w-1/2 relative lg:border-r border-theme-border bg-theme-card shadow-2xl lg:shadow-none sm:rounded-r-3xl lg:rounded-none z-10 transition-all">
         <div className="p-6 sm:p-10 lg:p-12 pb-0">
           <Link href="/" className="inline-flex items-center gap-2 group">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-md shadow-indigo-600/20 transition-transform group-hover:scale-105">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M2 12h10" />
-                <path d="M9 4v16" />
-                <path d="m3 9 3 3-3 3" />
-              </svg>
-            </div>
+            <Image src="/workmatelogo.png" alt="WorkMate Logo" width={40} height={40} className="w-auto h-10 transition-transform group-hover:scale-105" />
             <span className="text-2xl font-black text-indigo-950 tracking-tight">
               WorkMate
             </span>
@@ -249,33 +233,6 @@ export default function LoginPage() {
       <div className="hidden lg:flex w-1/2 flex-col bg-theme-bg relative overflow-hidden">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-100 rounded-full blur-[100px] opacity-70"></div>
         <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-100 rounded-full blur-[100px] opacity-70"></div>
-
-        <div className="absolute top-8 right-12 z-20 flex items-center gap-8">
-          <Link
-            href="#"
-            className="text-theme-text font-semibold text-sm hover:text-indigo-600 transition-colors"
-          >
-            Home
-          </Link>
-          <Link
-            href="#"
-            className="text-theme-text font-semibold text-sm hover:text-indigo-600 transition-colors"
-          >
-            About us
-          </Link>
-          <Link
-            href="#"
-            className="text-theme-text font-semibold text-sm hover:text-indigo-600 transition-colors"
-          >
-            Blog
-          </Link>
-          <Link
-            href="#"
-            className="text-theme-text font-semibold text-sm hover:text-indigo-600 transition-colors"
-          >
-            Pricing
-          </Link>
-        </div>
 
         <div className="flex flex-1 items-center justify-center p-12 z-10">
           <div className="relative w-full max-w-[600px] aspect-square transition-transform duration-700 hover:scale-[1.02]">
