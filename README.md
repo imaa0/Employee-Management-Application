@@ -1,4 +1,4 @@
-# WorkMate EMS — Employee Management System
+       # WorkMate EMS — Employee Management System
 
 A full-stack Employee Management System built with **Next.js 16** (frontend) and **Node.js / Express** (backend), backed by **MongoDB Atlas** and deployed to **Vercel**.
 
@@ -309,20 +309,6 @@ Uses **Vitest** + **Testing Library**.
 
 ---
 
-
-## Roles & Permissions
-
-| Permission             | `admin` | `hr`  | `viewer` / `Employee` |
-|------------------------|:-------:|:-----:|:---------------------:|
-| View employee list     | ✅      | ✅    | ✅                    |
-| View dashboard         | ✅      | ✅    | ✅                    |
-| Create employee        | ✅      | ✅    | ❌                    |
-| Edit employee          | ✅      | ✅    | ❌                    |
-| Delete employee        | ✅      | ❌    | ❌                    |
-| Manage user roles      | ✅      | ❌    | ❌                    |
-| Edit own profile       | ✅      | ✅    | ✅                    |
-
----
 
 ## Scripts Reference
 
