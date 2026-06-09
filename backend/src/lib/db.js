@@ -1,4 +1,8 @@
 const mongoose = require("mongoose");
+const dns = require("dns");
+
+// Force Node.js to use Google/Cloudflare DNS to fix querySrv ECONNREFUSED on some networks (like mobile hotspots)
+dns.setServers(["8.8.8.8", "1.1.1.1"]);
 
 const connectDB = async () => {
   try {

@@ -1,3 +1,5 @@
+import axios, { AxiosRequestConfig } from 'axios';
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -93,17 +95,22 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   };
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  const res = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
-  const json = await res.json();
+  const config: AxiosRequestConfig = {
+    url: `${API_BASE}${endpoint}`,
+    method: options.method || "GET",
+    headers,
+    data: options.body ? JSON.parse(options.body as string) : undefined,
+  };
 
-  if (!res.ok) {
-    const error: any = new Error(json.error || "Request failed");
-    error.status = res.status;
-    error.details = json.details;
+  try {
+    const res = await axios(config);
+    return res.data;
+  } catch (err: any) {
+    const error: any = new Error(err.response?.data?.error || "Request failed");
+    error.status = err.response?.status;
+    error.details = err.response?.data?.details;
     throw error;
   }
-
-  return json;
 }
 
 // ─── Auth API ───────────────────────────────────────────────────────────────
