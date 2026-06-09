@@ -1,74 +1,59 @@
 const express = require("express");
-const { v4: uuidv4 } = require("uuid");
-const {
-  getEmployees,
-  findEmployeeById,
-  addEmployee,
-  updateEmployee,
-  deleteEmployee,
-} = require("../lib/db");
-const {
-  createEmployeeSchema,
-  updateEmployeeSchema,
-  employeeQuerySchema,
-} = require("../lib/schemas");
+const { Employee } = require("../lib/db");
+const { createEmployeeSchema, updateEmployeeSchema, employeeQuerySchema } = require("../lib/schemas");
 
 const router = express.Router();
 
-// ─── GET /api/employees ─────────────────────────────────────────────────────
-router.get("/", (req, res, next) => {
+// GET /api/employees
+router.get("/", async (req, res, next) => {
   try {
     const query = employeeQuerySchema.parse(req.query);
-    let employees = getEmployees();
+    
+    let dbQuery = {};
 
-    // ── Search by name or email ──
     if (query.search) {
-      const term = query.search.toLowerCase();
-      employees = employees.filter(
-        (e) =>
-          e.name.toLowerCase().includes(term) ||
-          e.email.toLowerCase().includes(term) ||
-          (e.role && e.role.toLowerCase().includes(term)) ||
-          (e.department && e.department.toLowerCase().includes(term))
-      );
+      const term = new RegExp(query.search, "i");
+      dbQuery.$or = [
+        { name: term },
+        { email: term },
+        { role: term },
+        { department: term }
+      ];
     }
 
-    // ── Filter by status ──
     if (query.status && query.status !== "All" && query.status !== "") {
-      employees = employees.filter((e) => e.status === query.status);
+      dbQuery.status = query.status;
     }
 
-    // ── Filter by department ──
     if (query.department) {
-      employees = employees.filter(
-        (e) =>
-          e.department &&
-          e.department.toLowerCase() === query.department.toLowerCase()
-      );
+      dbQuery.department = new RegExp(`^${query.department}$`, "i");
     }
 
-    // ── Sorting ──
-    employees.sort((a, b) => {
-      const field = query.sortBy;
-      const valA = (a[field] || "").toString().toLowerCase();
-      const valB = (b[field] || "").toString().toLowerCase();
-      const cmp = valA.localeCompare(valB);
-      return query.sortOrder === "desc" ? -cmp : cmp;
-    });
+    // sort
+    const field = query.sortBy || "createdAt";
+    const sortObj = {};
+    sortObj[field] = query.sortOrder === "desc" ? -1 : 1;
 
-    // ── Stats (before pagination) ──
+    // fetch all for stats, could be optimized later
+    const allMatching = await Employee.find(dbQuery);
+    const totalItems = allMatching.length;
+    
+    // stats
+    const allEmployees = await Employee.find();
     const stats = {
-      total: employees.length,
-      active: employees.filter((e) => e.status === "Active").length,
-      inactive: employees.filter((e) => e.status === "Inactive").length,
+      total: allEmployees.length,
+      active: allEmployees.filter(e => e.status === "Active").length,
+      inactive: allEmployees.filter(e => e.status === "Inactive").length,
     };
 
-    // ── Pagination ──
-    const totalItems = employees.length;
     const totalPages = Math.ceil(totalItems / query.limit) || 1;
-    const page = Math.min(query.page, totalPages);
+    const page = Math.min(query.page, totalPages) || 1;
     const startIdx = (page - 1) * query.limit;
-    const paginated = employees.slice(startIdx, startIdx + query.limit);
+
+    const paginated = await Employee.find(dbQuery)
+      .sort(sortObj)
+      .skip(startIdx)
+      .limit(query.limit);
 
     res.json({
       success: true,
@@ -88,76 +73,79 @@ router.get("/", (req, res, next) => {
   }
 });
 
-// ─── GET /api/employees/stats ───────────────────────────────────────────────
-router.get("/stats", (req, res) => {
-  const employees = getEmployees();
-  const departments = [...new Set(employees.map((e) => e.department || "General"))];
+// GET /api/employees/stats
+router.get("/stats", async (req, res) => {
+  try {
+    const employees = await Employee.find();
+    const departments = [...new Set(employees.map((e) => e.department || "General"))];
 
-  // Monthly hires for chart (last 6 months)
-  const monthlyHires = [];
-  const now = new Date();
-  for (let i = 5; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const monthStr = d.toLocaleString("en-US", { month: "long" });
-    const year = d.getFullYear();
-    const month = d.getMonth();
-    const count = employees.filter((e) => {
-      const jd = new Date(e.joinedDate);
-      return jd.getFullYear() === year && jd.getMonth() === month;
-    }).length;
-    monthlyHires.push({ month: monthStr, hires: count });
+    const monthlyHires = [];
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthStr = d.toLocaleString("en-US", { month: "long" });
+      const year = d.getFullYear();
+      const month = d.getMonth();
+      const count = employees.filter((e) => {
+        if (!e.joinedDate) return false;
+        const jd = new Date(e.joinedDate);
+        return jd.getFullYear() === year && jd.getMonth() === month;
+      }).length;
+      monthlyHires.push({ month: monthStr, hires: count });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        total: employees.length,
+        active: employees.filter((e) => e.status === "Active").length,
+        inactive: employees.filter((e) => e.status === "Inactive").length,
+        departments: departments.length,
+        departmentList: departments,
+        recentHires: [...employees]
+          .sort((a, b) => new Date(b.joinedDate || b.createdAt) - new Date(a.joinedDate || a.createdAt))
+          .slice(0, 5),
+        monthlyHires,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ success: false });
   }
-
-  res.json({
-    success: true,
-    data: {
-      total: employees.length,
-      active: employees.filter((e) => e.status === "Active").length,
-      inactive: employees.filter((e) => e.status === "Inactive").length,
-      departments: departments.length,
-      departmentList: departments,
-      recentHires: [...employees]
-        .sort((a, b) => new Date(b.joinedDate) - new Date(a.joinedDate))
-        .slice(0, 5),
-      monthlyHires,
-    },
-  });
 });
 
-// ─── GET /api/employees/:id ─────────────────────────────────────────────────
-router.get("/:id", (req, res) => {
-  const employee = findEmployeeById(req.params.id);
-  if (!employee) {
-    return res.status(404).json({ success: false, error: "Employee not found" });
+// GET /api/employees/:id
+router.get("/:id", async (req, res) => {
+  try {
+    const employee = await Employee.findOne({ id: req.params.id });
+    if (!employee) {
+      return res.status(404).json({ success: false, error: "Employee not found" });
+    }
+    res.json({ success: true, data: employee });
+  } catch (error) {
+    res.status(500).json({ success: false });
   }
-  res.json({ success: true, data: employee });
 });
 
-// ─── POST /api/employees ────────────────────────────────────────────────────
-router.post("/", (req, res, next) => {
+// POST /api/employees
+router.post("/", async (req, res, next) => {
   try {
     const data = createEmployeeSchema.parse(req.body);
 
-    // Check duplicate email
-    const employees = getEmployees();
-    const exists = employees.find(
-      (e) => e.email.toLowerCase() === data.email.toLowerCase()
-    );
+    const exists = await Employee.findOne({ email: new RegExp(`^${data.email}$`, "i") });
     if (exists) {
-      return res.status(409).json({
-        success: false,
-        error: "An employee with this email already exists",
-      });
+      return res.status(409).json({ success: false, error: "An employee with this email already exists" });
     }
 
-    const newEmployee = {
-      id: `EMP-${String(employees.length + 1).padStart(3, "0")}`,
+    const allEmps = await Employee.find();
+    let nextIdNum = allEmps.length + 1;
+    
+    const newEmployee = new Employee({
+      id: `EMP-${String(nextIdNum).padStart(3, "0")}`,
       ...data,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+      joinedDate: data.joinedDate || new Date().toISOString(),
+    });
 
-    addEmployee(newEmployee);
+    await newEmployee.save();
 
     res.status(201).json({
       success: true,
@@ -169,11 +157,15 @@ router.post("/", (req, res, next) => {
   }
 });
 
-// ─── PUT /api/employees/:id ─────────────────────────────────────────────────
-router.put("/:id", (req, res, next) => {
+// PUT /api/employees/:id
+router.put("/:id", async (req, res, next) => {
   try {
     const data = updateEmployeeSchema.parse(req.body);
-    const updated = updateEmployee(req.params.id, data);
+    const updated = await Employee.findOneAndUpdate(
+      { id: req.params.id },
+      data,
+      { new: true }
+    );
 
     if (!updated) {
       return res.status(404).json({ success: false, error: "Employee not found" });
@@ -189,13 +181,17 @@ router.put("/:id", (req, res, next) => {
   }
 });
 
-// ─── DELETE /api/employees/:id ──────────────────────────────────────────────
-router.delete("/:id", (req, res) => {
-  const deleted = deleteEmployee(req.params.id);
-  if (!deleted) {
-    return res.status(404).json({ success: false, error: "Employee not found" });
+// DELETE /api/employees/:id
+router.delete("/:id", async (req, res, next) => {
+  try {
+    const deleted = await Employee.findOneAndDelete({ id: req.params.id });
+    if (!deleted) {
+      return res.status(404).json({ success: false, error: "Employee not found" });
+    }
+    res.json({ success: true, message: "Employee deleted successfully" });
+  } catch (err) {
+    next(err);
   }
-  res.json({ success: true, message: "Employee deleted successfully" });
 });
 
 module.exports = router;

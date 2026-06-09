@@ -122,6 +122,21 @@ export async function registerAPI(data: RegisterPayload) {
   });
 }
 
+export async function updateProfileAPI(data: { name?: string; phone?: string; location?: string; avatar?: string }) {
+  return request<{ success: boolean; data: { token: string; user: any } }>("/auth/profile", {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updatePasswordAPI(data: { currentPassword?: string; newPassword?: string; }) {
+  return request<{ success: boolean; message: string }>("/auth/password", {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
+
 // ─── Employee API ───────────────────────────────────────────────────────────
 
 export async function getEmployeesAPI(query: EmployeeQuery = {}) {

@@ -26,6 +26,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem,
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 
+import { getUser } from "@/lib/api";
+
 export default function DashboardLayout({
   children,
 }: {
@@ -34,6 +36,12 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [user, setUserData] = useState<{name: string, email: string} | null>(null);
+
+  useEffect(() => {
+    const data = getUser();
+    if (data) setUserData(data);
+  }, []);
 
   const navigation = [
     { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
@@ -212,25 +220,13 @@ export default function DashboardLayout({
             </DropdownMenu>
 
             {/* Quick Settings */}
-            <DropdownMenu>
-              <DropdownMenuTrigger className="hidden sm:flex p-2 rounded-full text-muted-foreground hover:bg-slate-100 hover:text-foreground dark:hover:bg-slate-800 transition-colors outline-none ring-0">
-                <Settings size={20} />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-64 rounded-2xl">
-                <DropdownMenuLabel className="font-bold text-base px-4 py-3">Quick Settings</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuGroup className="p-2">
-                  <DropdownMenuItem className="flex gap-3 px-3 py-2.5 rounded-xl cursor-pointer">
-                    <Shield size={18} className="text-muted-foreground" />
-                    <span className="font-semibold text-sm">Security Settings</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="flex gap-3 px-3 py-2.5 rounded-xl cursor-pointer">
-                    <Settings size={18} className="text-muted-foreground" />
-                    <span className="font-semibold text-sm">General Preferences</span>
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Link 
+              href="/dashboard/settings"
+              className="hidden sm:flex p-2 rounded-full text-muted-foreground hover:bg-slate-100 hover:text-foreground dark:hover:bg-slate-800 transition-colors outline-none ring-0"
+              title="Settings"
+            >
+              <Settings size={20} />
+            </Link>
 
             <div className="w-px h-8 bg-border hidden sm:block"></div>
 
@@ -238,14 +234,14 @@ export default function DashboardLayout({
             <DropdownMenu>
               <DropdownMenuTrigger className="cursor-pointer outline-none">
                 <Avatar className="h-9 w-9 border border-primary/20 hover:ring-2 ring-primary/50 ring-offset-1 transition-all">
-                  <AvatarImage src="https://avatar.vercel.sh/admin" />
-                  <AvatarFallback className="bg-primary/10 text-primary font-bold">A</AvatarFallback>
+                  <AvatarImage src={`https://avatar.vercel.sh/${user ? user.email : "admin"}`} />
+                  <AvatarFallback className="bg-primary/10 text-primary font-bold">{user ? user.name.charAt(0).toUpperCase() : 'A'}</AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-64 rounded-2xl mt-1">
                 <div className="px-5 py-4 border-b">
-                  <p className="font-bold text-lg text-foreground leading-tight tracking-tight">Admin User</p>
-                  <p className="text-sm font-medium text-muted-foreground mt-1">admin@workmate.com</p>
+                  <p className="font-bold text-lg text-foreground leading-tight tracking-tight">{user ? user.name : "Admin User"}</p>
+                  <p className="text-sm font-medium text-muted-foreground mt-1">{user ? user.email : "admin@workmate.com"}</p>
                 </div>
                 <DropdownMenuGroup className="p-2 border-b">
                   <DropdownMenuItem className="rounded-xl cursor-pointer py-2.5 px-3">

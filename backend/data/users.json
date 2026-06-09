@@ -6,5 +6,13 @@
     "password": "$2b$12$HPHrrWVJHS5YZjSEYW4POeF1XerX/B4eCTfYwlwzQmaWV2p7rhaR.",
     "role": "admin",
     "createdAt": "2026-06-09T07:35:33.533Z"
+  },
+  {
+    "id": "9da25078-25a0-4304-8598-7c00911759d8",
+    "name": "I G V Kodagoda",
+    "email": "imanthagihan@gmail.com",
+    "password": "$2b$12$1FO2B.t84hP2IXMmktyqauYwsr6MTfj/r2TerVFQLBkTYBz1Dg66O",
+    "role": "viewer",
+    "createdAt": "2026-06-09T09:18:34.639Z"
   }
 ]

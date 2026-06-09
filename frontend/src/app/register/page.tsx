@@ -7,22 +7,22 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Eye, EyeOff, CheckSquare, AlertCircle, Loader2 } from "lucide-react";
+import { Eye, EyeOff, AlertCircle, Loader2 } from "lucide-react";
 import SplitText from "@/components/SplitText";
-import { loginAPI, setToken, setUser } from "@/lib/api";
+import { registerAPI, setToken, setUser } from "@/lib/api";
 
-const loginSchema = z.object({
+const registerSchema = z.object({
+  name: z.string().min(2, { message: "Name must be at least 2 characters long" }),
   email: z
     .string()
     .min(1, { message: "Email is required" })
     .email({ message: "Please enter a valid email address" }),
-  password: z.string().min(1, { message: "Password is required" }),
-  rememberMe: z.boolean().optional(),
+  password: z.string().min(6, { message: "Password must be at least 6 characters long" }),
 });
 
-type LoginFormValues = z.infer<typeof loginSchema>;
+type RegisterFormValues = z.infer<typeof registerSchema>;
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState("");
@@ -30,29 +30,25 @@ export default function LoginPage() {
   const {
     register,
     handleSubmit,
-    watch,
-    setValue,
     formState: { errors, isSubmitting },
-  } = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
+  } = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
     defaultValues: {
+      name: "",
       email: "",
       password: "",
-      rememberMe: false,
     },
   });
 
-  const rememberMeValue = watch("rememberMe");
-
-  const onSubmit = async (data: LoginFormValues) => {
+  const onSubmit = async (data: RegisterFormValues) => {
     setServerError("");
     try {
-      const res = await loginAPI({ email: data.email, password: data.password });
+      const res = await registerAPI({ name: data.name, email: data.email, password: data.password });
       setToken(res.data.token);
       setUser(res.data.user);
       router.push("/dashboard");
     } catch (err: any) {
-      setServerError(err.message || "Login failed. Please try again.");
+      setServerError(err.message || "Registration failed. Please try again.");
     }
   };
 
@@ -72,7 +68,7 @@ export default function LoginPage() {
         <div className="flex flex-1 items-center justify-center p-6 sm:p-10 lg:p-12">
           <div className="w-full max-w-[440px] animate-in fade-in slide-in-from-bottom-4 duration-700">
             <SplitText
-              text="Sign in"
+              text="Create Account"
               tag="h1"
               className="text-3xl sm:text-4xl font-extrabold text-theme-heading mb-3 tracking-tight"
               delay={60}
@@ -86,7 +82,7 @@ export default function LoginPage() {
               textAlign="left"
             />
             <SplitText
-              text="Welcome back! Please enter your details."
+              text="Join WorkMate and streamline your management."
               tag="p"
               className="text-theme-text mb-8 sm:mb-10 text-base sm:text-lg"
               delay={30}
@@ -109,6 +105,28 @@ export default function LoginPage() {
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 sm:space-y-6">
               
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-theme-heading" htmlFor="name">
+                  Full Name
+                </label>
+                <div className="relative">
+                  <input
+                    id="name"
+                    type="text"
+                    placeholder="Enter your full name"
+                    className={`block w-full rounded-xl border-0 py-3.5 px-4 text-theme-heading shadow-sm ring-1 ring-inset transition-all sm:text-sm sm:leading-6 ${
+                      errors.name 
+                        ? "ring-red-500 focus:ring-2 focus:ring-inset focus:ring-red-600 bg-red-50" 
+                        : "ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 bg-theme-card"
+                    }`}
+                    {...register("name")}
+                  />
+                  {errors.name && (
+                    <p className="text-red-500 text-xs sm:text-sm mt-1.5 font-medium">{errors.name.message}</p>
+                  )}
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <label className="text-sm font-bold text-theme-heading" htmlFor="email">
                   Email
@@ -160,22 +178,6 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-1">
-                <button
-                  type="button"
-                  onClick={() => setValue("rememberMe", !rememberMeValue)}
-                  className="flex items-center gap-2.5 group focus:outline-none"
-                >
-                  <div className="flex h-5 w-5 items-center justify-center rounded border border-slate-300 bg-theme-card text-indigo-600 transition-colors group-hover:border-indigo-500 group-focus:ring-2 group-focus:ring-indigo-600 group-focus:ring-offset-2">
-                    {rememberMeValue && <CheckSquare size={16} strokeWidth={3} className="text-indigo-600" />}
-                  </div>
-                  <span className="text-sm font-medium text-slate-600 group-hover:text-theme-heading transition-colors select-none">Remember for 30 days</span>
-                </button>
-                <Link href="#" className="text-sm font-semibold text-indigo-600 hover:text-indigo-500 transition-colors">
-                  Forgot password?
-                </Link>
-              </div>
-
               <button
                 type="submit"
                 disabled={isSubmitting}
@@ -184,19 +186,15 @@ export default function LoginPage() {
                 {isSubmitting ? (
                   <>
                     <Loader2 size={18} className="animate-spin" />
-                    Signing in...
+                    Signing up...
                   </>
                 ) : (
-                  "Sign in"
+                  "Create Account"
                 )}
               </button>
 
               <p className="text-center text-sm text-slate-500 mt-4">
-                Demo: <span className="font-semibold text-slate-700">admin@workmate.com</span> / <span className="font-semibold text-slate-700">Admin@123</span>
-              </p>
-
-              <p className="text-center text-sm text-slate-500 mt-2">
-                Don't have an account? <Link href="/register" className="font-semibold text-indigo-600 hover:text-indigo-500 transition-colors">Sign up</Link>
+                Already have an account? <Link href="/" className="font-semibold text-indigo-600 hover:text-indigo-500 transition-colors">Sign in</Link>
               </p>
 
             </form>
@@ -208,13 +206,6 @@ export default function LoginPage() {
         
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-100 rounded-full blur-[100px] opacity-70"></div>
         <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-100 rounded-full blur-[100px] opacity-70"></div>
-
-        <div className="absolute top-8 right-12 z-20 flex items-center gap-8">
-          <Link href="#" className="text-theme-text font-semibold text-sm hover:text-indigo-600 transition-colors">Home</Link>
-          <Link href="#" className="text-theme-text font-semibold text-sm hover:text-indigo-600 transition-colors">About us</Link>
-          <Link href="#" className="text-theme-text font-semibold text-sm hover:text-indigo-600 transition-colors">Blog</Link>
-          <Link href="#" className="text-theme-text font-semibold text-sm hover:text-indigo-600 transition-colors">Pricing</Link>
-        </div>
 
         <div className="flex flex-1 items-center justify-center p-12 z-10">
           <div className="relative w-full max-w-[600px] aspect-square transition-transform duration-700 hover:scale-[1.02]">

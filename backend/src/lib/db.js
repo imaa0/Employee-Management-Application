@@ -1,99 +1,38 @@
-const fs = require("fs");
-const path = require("path");
+const mongoose = require("mongoose");
 
-const EMPLOYEES_FILE = path.join(__dirname, "../../data/employees.json");
-const USERS_FILE = path.join(__dirname, "../../data/users.json");
-
-/**
- * Generic: read JSON file, return parsed array
- */
-function readJSON(filePath) {
+const connectDB = async () => {
   try {
-    if (!fs.existsSync(filePath)) return [];
-    const raw = fs.readFileSync(filePath, "utf-8");
-    return JSON.parse(raw);
-  } catch {
-    return [];
+    const conn = await mongoose.connect(process.env.MONGODB_URI);
+    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
+  } catch (error) {
+    console.error("❌ MongoDB Connection Error:", error);
+    process.exit(1); // Exit process with failure
   }
-}
-
-/**
- * Generic: write data to JSON file
- */
-function writeJSON(filePath, data) {
-  const dir = path.dirname(filePath);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf-8");
-}
-
-// ─── Employee helpers ─────────────────────────────────────────────────────────
-
-function getEmployees() {
-  return readJSON(EMPLOYEES_FILE);
-}
-
-function saveEmployees(employees) {
-  writeJSON(EMPLOYEES_FILE, employees);
-}
-
-function findEmployeeById(id) {
-  return getEmployees().find((e) => e.id === id) || null;
-}
-
-function addEmployee(employee) {
-  const employees = getEmployees();
-  employees.unshift(employee); // newest first
-  saveEmployees(employees);
-  return employee;
-}
-
-function updateEmployee(id, updates) {
-  const employees = getEmployees();
-  const idx = employees.findIndex((e) => e.id === id);
-  if (idx === -1) return null;
-  employees[idx] = { ...employees[idx], ...updates, updatedAt: new Date().toISOString() };
-  saveEmployees(employees);
-  return employees[idx];
-}
-
-function deleteEmployee(id) {
-  const employees = getEmployees();
-  const idx = employees.findIndex((e) => e.id === id);
-  if (idx === -1) return false;
-  employees.splice(idx, 1);
-  saveEmployees(employees);
-  return true;
-}
-
-// ─── User helpers ─────────────────────────────────────────────────────────────
-
-function getUsers() {
-  return readJSON(USERS_FILE);
-}
-
-function saveUsers(users) {
-  writeJSON(USERS_FILE, users);
-}
-
-function findUserByEmail(email) {
-  return getUsers().find((u) => u.email.toLowerCase() === email.toLowerCase()) || null;
-}
-
-function addUser(user) {
-  const users = getUsers();
-  users.push(user);
-  saveUsers(users);
-  return user;
-}
-
-module.exports = {
-  getEmployees,
-  saveEmployees,
-  findEmployeeById,
-  addEmployee,
-  updateEmployee,
-  deleteEmployee,
-  getUsers,
-  findUserByEmail,
-  addUser,
 };
+
+const userSchema = new mongoose.Schema({
+  id: { type: String, required: true, unique: true },
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  role: { type: String, default: "Employee" },
+  phone: String,
+  location: String,
+  avatar: String,
+}, { timestamps: true });
+
+const employeeSchema = new mongoose.Schema({
+  id: { type: String, required: true, unique: true },
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  role: String,
+  department: String,
+  status: { type: String, default: "Active" },
+  joinedDate: String,
+  avatar: String,
+}, { timestamps: true });
+
+const User = mongoose.models.User || mongoose.model("User", userSchema);
+const Employee = mongoose.models.Employee || mongoose.model("Employee", employeeSchema);
+
+module.exports = { connectDB, User, Employee };

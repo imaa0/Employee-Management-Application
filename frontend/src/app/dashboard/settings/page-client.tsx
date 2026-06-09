@@ -1,10 +1,43 @@
 "use client";
 
 import React, { useState } from "react";
-import { Shield, Key, Bell, Globe, Smartphone, Lock } from "lucide-react";
+import { Shield, Key, Bell, Globe, Smartphone, Lock, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
+import { updatePasswordAPI } from "@/lib/api";
 
 export default function SettingsClient() {
   const [activeTab, setActiveTab] = useState("security");
+  const [isUpdatingPwd, setIsUpdatingPwd] = useState(false);
+  const [pwdMsg, setPwdMsg] = useState<{type: "error" | "success", text: string} | null>(null);
+
+  const handlePasswordUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setPwdMsg(null);
+    const formData = new FormData(e.currentTarget);
+    const currentPassword = formData.get("currentPassword") as string;
+    const newPassword = formData.get("newPassword") as string;
+    const confirmPassword = formData.get("confirmPassword") as string;
+
+    if (newPassword !== confirmPassword) {
+      return setPwdMsg({ type: "error", text: "New passwords do not match." });
+    }
+
+    if (newPassword.length < 6) {
+      return setPwdMsg({ type: "error", text: "New password must be at least 6 characters." });
+    }
+
+    try {
+      setIsUpdatingPwd(true);
+      const res = await updatePasswordAPI({ currentPassword, newPassword });
+      if (res.success) {
+        setPwdMsg({ type: "success", text: "Password updated successfully!" });
+        (e.target as HTMLFormElement).reset();
+      }
+    } catch (err: any) {
+      setPwdMsg({ type: "error", text: err.message || "Failed to update password." });
+    } finally {
+      setIsUpdatingPwd(false);
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-500">
@@ -66,13 +99,23 @@ export default function SettingsClient() {
                 </p>
               </div>
 
-              <div className="space-y-4 max-w-md">
+              <form onSubmit={handlePasswordUpdate} className="space-y-4 max-w-md">
+                
+                {pwdMsg && (
+                  <div className={`p-3 rounded-xl border flex items-center gap-2 text-sm font-bold ${pwdMsg.type === "error" ? "bg-red-50 text-red-600 border-red-200" : "bg-emerald-50 text-emerald-600 border-emerald-200"}`}>
+                    {pwdMsg.type === "error" ? <AlertCircle size={18} /> : <CheckCircle2 size={18} />}
+                    {pwdMsg.text}
+                  </div>
+                )}
+
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-theme-heading">
                     Current Password
                   </label>
                   <input
                     type="password"
+                    name="currentPassword"
+                    required
                     placeholder="••••••••"
                     className="w-full rounded-xl bg-theme-bg border border-theme-border py-2.5 px-4 text-theme-heading focus:ring-2 focus:ring-indigo-600 outline-none transition-all font-medium text-sm"
                   />
@@ -83,6 +126,8 @@ export default function SettingsClient() {
                   </label>
                   <input
                     type="password"
+                    name="newPassword"
+                    required
                     placeholder="••••••••"
                     className="w-full rounded-xl bg-theme-bg border border-theme-border py-2.5 px-4 text-theme-heading focus:ring-2 focus:ring-indigo-600 outline-none transition-all font-medium text-sm"
                   />
@@ -93,14 +138,17 @@ export default function SettingsClient() {
                   </label>
                   <input
                     type="password"
+                    name="confirmPassword"
+                    required
                     placeholder="••••••••"
                     className="w-full rounded-xl bg-theme-bg border border-theme-border py-2.5 px-4 text-theme-heading focus:ring-2 focus:ring-indigo-600 outline-none transition-all font-medium text-sm"
                   />
                 </div>
-                <button className="px-5 py-2.5 mt-2 rounded-xl bg-indigo-600 text-white font-bold text-sm shadow-md shadow-indigo-600/20 hover:bg-indigo-500 transition-all active:scale-95">
+                <button type="submit" disabled={isUpdatingPwd} className="px-5 py-2.5 mt-2 rounded-xl bg-indigo-600 text-white font-bold text-sm shadow-md shadow-indigo-600/20 hover:bg-indigo-500 transition-all active:scale-95 flex items-center gap-2 disabled:opacity-50">
+                  {isUpdatingPwd && <Loader2 size={16} className="animate-spin" />}
                   Update Password
                 </button>
-              </div>
+              </form>
 
               <div className="border-t border-theme-border pt-8 mt-8">
                 <h2 className="text-xl font-bold text-theme-heading flex items-center gap-2 mb-4">
