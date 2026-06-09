@@ -1,8 +1,18 @@
-﻿# Ignore frontend build and dependencies
-/frontend/node_modules/
+# Dependencies — never commit node_modules
+node_modules/
+**/node_modules/
+
+# Frontend build outputs
 /frontend/.next/
 /frontend/.git/
 /frontend/package-lock.json
 
-# OS files
+# Environment files (contain secrets)
+.env
+.env.local
+.env.production
+
+# OS / editor files
 .DS_Store
+Thumbs.db
+*.log
