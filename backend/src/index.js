@@ -38,8 +38,8 @@ app.get("/api/health", (req, res) => {
 // Error Handler
 app.use(errorHandler);
 
-// Only listen when running locally (not on Vercel)
-if (process.env.VERCEL !== "1") {
+// Prevent app.listen from crashing the lambda on Vercel
+if (process.env.NODE_ENV === "development" && process.env.VERCEL !== "1" && !process.env.VERCEL_ENV) {
   app.listen(PORT, () => {
     console.log(`\n🚀 WorkMate EMS API running at http://localhost:${PORT}`);
     console.log(`   Health: http://localhost:${PORT}/api/health\n`);
