@@ -1,8 +1,10 @@
 const mongoose = require("mongoose");
 const dns = require("dns");
 
-// Force Node.js to use Google/Cloudflare DNS to fix querySrv ECONNREFUSED on some networks (like mobile hotspots)
-dns.setServers(["8.8.8.8", "1.1.1.1"]);
+// Force Node.js to use Google/Cloudflare DNS locally
+if (process.env.VERCEL !== "1") {
+  try { dns.setServers(["8.8.8.8", "1.1.1.1"]); } catch (e) {}
+}
 
 const connectDB = async () => {
   try {
@@ -10,7 +12,10 @@ const connectDB = async () => {
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
     console.error("❌ MongoDB Connection Error:", error);
-    process.exit(1); // Exit process with failure
+    // Exit process ONLY locally. In Serverless, exiting crashes the lambda container instantly.
+    if (process.env.VERCEL !== "1") {
+      process.exit(1); 
+    }
   }
 };
 

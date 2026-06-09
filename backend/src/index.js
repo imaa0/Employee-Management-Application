@@ -14,7 +14,7 @@ connectDB();
 
 // Middleware
 app.use(cors({
-  origin: ["https://employee-management-application-1q5.vercel.app", "http://localhost:3000"],
+  origin: true,
   credentials: true,
 }));
 app.use(express.json({ limit: "50mb" }));
