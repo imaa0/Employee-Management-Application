@@ -1,0 +1,10 @@
+[
+  {
+    "id": "USR-001",
+    "name": "Admin User",
+    "email": "admin@workmate.com",
+    "password": "$2b$12$HPHrrWVJHS5YZjSEYW4POeF1XerX/B4eCTfYwlwzQmaWV2p7rhaR.",
+    "role": "admin",
+    "createdAt": "2026-06-09T07:35:33.533Z"
+  }
+]
