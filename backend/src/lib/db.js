@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const dns = require("dns");
 
 // Force Node.js to use Google/Cloudflare DNS locally
-if (process.env.VERCEL !== "1") {
+if (process.env.NODE_ENV !== "production") {
   try { dns.setServers(["8.8.8.8", "1.1.1.1"]); } catch (e) {}
 }
 
@@ -11,11 +11,8 @@ const connectDB = async () => {
     const conn = await mongoose.connect(process.env.MONGODB_URI);
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
-    console.error("❌ MongoDB Connection Error:", error);
-    // Exit process ONLY locally. In Serverless, exiting crashes the lambda container instantly.
-    if (process.env.VERCEL !== "1") {
-      process.exit(1); 
-    }
+    // Throw the error so it can be logged, but DO NOT exit the process.
+    throw new Error("MongoDB Connection Error");
   }
 };
 
