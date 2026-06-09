@@ -41,7 +41,13 @@ app.get("/api/health", (req, res) => {
 // Error Handler
 app.use(errorHandler);
 
-app.listen(PORT, () => {
-  console.log(`\n🚀 WorkMate EMS API running at http://localhost:${PORT}`);
-  console.log(`   Health: http://localhost:${PORT}/api/health\n`);
-});
+// Only listen when running locally (not on Vercel)
+if (process.env.VERCEL !== "1") {
+  app.listen(PORT, () => {
+    console.log(`\n🚀 WorkMate EMS API running at http://localhost:${PORT}`);
+    console.log(`   Health: http://localhost:${PORT}/api/health\n`);
+  });
+}
+
+// Export for Vercel Serverless
+module.exports = app;
