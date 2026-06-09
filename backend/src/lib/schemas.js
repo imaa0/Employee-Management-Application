@@ -1,6 +1,6 @@
 const { z } = require("zod");
 
-// ─── Employee Schemas ─────────────────────────────────────────────────────────
+// employee schemas
 
 const createEmployeeSchema = z.object({
   name: z
@@ -86,7 +86,7 @@ const employeeQuerySchema = z.object({
   sortOrder: z.enum(["asc", "desc"]).optional().default("desc"),
 });
 
-// ─── Auth Schemas ─────────────────────────────────────────────────────────────
+// auth schemas
 
 const loginSchema = z.object({
   email: z

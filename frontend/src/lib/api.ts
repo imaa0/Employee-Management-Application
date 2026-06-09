@@ -1,6 +1,6 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
-// ─── Types ──────────────────────────────────────────────────────────────────
+// types
 
 export type Employee = {
   id: string;
@@ -59,7 +59,7 @@ export type EmployeeQuery = {
   sortOrder?: string;
 };
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
+// helpers
 
 function getToken(): string | null {
   if (typeof window === "undefined") return null;
@@ -110,7 +110,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   return data;
 }
 
-// ─── Auth API ───────────────────────────────────────────────────────────────
+// auth endpoints
 
 export async function loginAPI(data: LoginPayload) {
   return request<{ success: boolean; message: string; data: { token: string; user: any } }>("/auth/login", {
@@ -141,7 +141,7 @@ export async function updatePasswordAPI(data: { currentPassword?: string; newPas
 }
 
 
-// ─── Employee API ───────────────────────────────────────────────────────────
+// employee endpoints
 
 export async function getEmployeesAPI(query: EmployeeQuery = {}) {
   const params = new URLSearchParams();
