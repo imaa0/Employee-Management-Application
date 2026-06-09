@@ -12,12 +12,18 @@ import SplitText from "@/components/SplitText";
 import { registerAPI, setToken, setUser } from "@/lib/api";
 
 const registerSchema = z.object({
-  name: z.string().min(2, { message: "Name must be at least 2 characters long" }),
+  name: z
+    .string()
+    .min(2, { message: "Name must be at least 2 characters long" }),
   email: z
     .string()
     .min(1, { message: "Email is required" })
     .email({ message: "Please enter a valid email address" }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters long" }),
+  password: z
+    .string()
+    .min(8, { message: "Password must be at least 8 characters long" })
+    .regex(/[A-Z]/, { message: "Must contain at least one uppercase letter" })
+    .regex(/[0-9]/, { message: "Must contain at least one number" }),
 });
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
@@ -43,7 +49,11 @@ export default function RegisterPage() {
   const onSubmit = async (data: RegisterFormValues) => {
     setServerError("");
     try {
-      const res = await registerAPI({ name: data.name, email: data.email, password: data.password });
+      const res = await registerAPI({
+        name: data.name,
+        email: data.email,
+        password: data.password,
+      });
       setToken(res.data.token);
       setUser(res.data.user);
       router.push("/dashboard");
@@ -55,13 +65,28 @@ export default function RegisterPage() {
   return (
     <div className="flex min-h-screen w-full bg-theme-bg lg:bg-theme-card text-theme-heading font-sans">
       <div className="flex w-full flex-col lg:w-1/2 relative lg:border-r border-theme-border bg-theme-card shadow-2xl lg:shadow-none sm:rounded-r-3xl lg:rounded-none z-10 transition-all">
-        
         <div className="p-6 sm:p-10 lg:p-12 pb-0">
           <Link href="/" className="inline-flex items-center gap-2 group">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-md shadow-indigo-600/20 transition-transform group-hover:scale-105">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12h10"/><path d="M9 4v16"/><path d="m3 9 3 3-3 3"/></svg>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M2 12h10" />
+                <path d="M9 4v16" />
+                <path d="m3 9 3 3-3 3" />
+              </svg>
             </div>
-            <span className="text-2xl font-black text-indigo-950 tracking-tight">WorkMate</span>
+            <span className="text-2xl font-black text-indigo-950 tracking-tight">
+              WorkMate
+            </span>
           </Link>
         </div>
 
@@ -103,10 +128,15 @@ export default function RegisterPage() {
               </div>
             )}
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 sm:space-y-6">
-              
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="space-y-5 sm:space-y-6"
+            >
               <div className="space-y-2">
-                <label className="text-sm font-bold text-theme-heading" htmlFor="name">
+                <label
+                  className="text-sm font-bold text-theme-heading"
+                  htmlFor="name"
+                >
                   Full Name
                 </label>
                 <div className="relative">
@@ -115,20 +145,25 @@ export default function RegisterPage() {
                     type="text"
                     placeholder="Enter your full name"
                     className={`block w-full rounded-xl border-0 py-3.5 px-4 text-theme-heading shadow-sm ring-1 ring-inset transition-all sm:text-sm sm:leading-6 ${
-                      errors.name 
-                        ? "ring-red-500 focus:ring-2 focus:ring-inset focus:ring-red-600 bg-red-50" 
+                      errors.name
+                        ? "ring-red-500 focus:ring-2 focus:ring-inset focus:ring-red-600 bg-red-50"
                         : "ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 bg-theme-card"
                     }`}
                     {...register("name")}
                   />
                   {errors.name && (
-                    <p className="text-red-500 text-xs sm:text-sm mt-1.5 font-medium">{errors.name.message}</p>
+                    <p className="text-red-500 text-xs sm:text-sm mt-1.5 font-medium">
+                      {errors.name.message}
+                    </p>
                   )}
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-bold text-theme-heading" htmlFor="email">
+                <label
+                  className="text-sm font-bold text-theme-heading"
+                  htmlFor="email"
+                >
                   Email
                 </label>
                 <div className="relative">
@@ -137,20 +172,25 @@ export default function RegisterPage() {
                     type="email"
                     placeholder="Enter your email"
                     className={`block w-full rounded-xl border-0 py-3.5 px-4 text-theme-heading shadow-sm ring-1 ring-inset transition-all sm:text-sm sm:leading-6 ${
-                      errors.email 
-                        ? "ring-red-500 focus:ring-2 focus:ring-inset focus:ring-red-600 bg-red-50" 
+                      errors.email
+                        ? "ring-red-500 focus:ring-2 focus:ring-inset focus:ring-red-600 bg-red-50"
                         : "ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 bg-theme-card"
                     }`}
                     {...register("email")}
                   />
                   {errors.email && (
-                    <p className="text-red-500 text-xs sm:text-sm mt-1.5 font-medium">{errors.email.message}</p>
+                    <p className="text-red-500 text-xs sm:text-sm mt-1.5 font-medium">
+                      {errors.email.message}
+                    </p>
                   )}
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-bold text-theme-heading" htmlFor="password">
+                <label
+                  className="text-sm font-bold text-theme-heading"
+                  htmlFor="password"
+                >
                   Password
                 </label>
                 <div className="relative">
@@ -159,8 +199,8 @@ export default function RegisterPage() {
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     className={`block w-full rounded-xl border-0 py-3.5 pl-4 pr-12 text-theme-heading shadow-sm ring-1 ring-inset transition-all sm:text-sm sm:leading-6 ${
-                      errors.password 
-                        ? "ring-red-500 focus:ring-2 focus:ring-inset focus:ring-red-600 bg-red-50" 
+                      errors.password
+                        ? "ring-red-500 focus:ring-2 focus:ring-inset focus:ring-red-600 bg-red-50"
                         : "ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 bg-theme-card"
                     }`}
                     {...register("password")}
@@ -173,7 +213,16 @@ export default function RegisterPage() {
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
                   {errors.password && (
-                    <p className="text-red-500 text-xs sm:text-sm mt-1.5 font-medium">{errors.password.message}</p>
+                    <p className="text-red-500 text-xs sm:text-sm mt-1.5 font-medium">
+                      {errors.password.message}
+                    </p>
+                  )}
+                  {!errors.password && (
+                    <div className="text-xs text-slate-500 mt-2 space-y-1 font-medium bg-theme-bg/50 p-3 rounded-lg border border-theme-border/50">
+                      <p>• At least 8 characters long</p>
+                      <p>• Must contain at least one uppercase letter (A-Z)</p>
+                      <p>• Must contain at least one number (0-9)</p>
+                    </div>
                   )}
                 </div>
               </div>
@@ -194,16 +243,20 @@ export default function RegisterPage() {
               </button>
 
               <p className="text-center text-sm text-slate-500 mt-4">
-                Already have an account? <Link href="/" className="font-semibold text-indigo-600 hover:text-indigo-500 transition-colors">Sign in</Link>
+                Already have an account?{" "}
+                <Link
+                  href="/"
+                  className="font-semibold text-indigo-600 hover:text-indigo-500 transition-colors"
+                >
+                  Sign in
+                </Link>
               </p>
-
             </form>
           </div>
         </div>
       </div>
 
       <div className="hidden lg:flex w-1/2 flex-col bg-theme-bg relative overflow-hidden">
-        
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-100 rounded-full blur-[100px] opacity-70"></div>
         <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-100 rounded-full blur-[100px] opacity-70"></div>
 
@@ -218,7 +271,6 @@ export default function RegisterPage() {
             />
           </div>
         </div>
-
       </div>
     </div>
   );
