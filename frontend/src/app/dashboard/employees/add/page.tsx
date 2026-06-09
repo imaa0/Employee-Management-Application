@@ -16,7 +16,7 @@ const addEmployeeSchema = z.object({
   department: z.string().min(1, "Department is required").max(100),
   phone: z.string().optional().or(z.literal("")),
   status: z.enum(["Active", "Inactive"] as const, { message: "Status is required" }),
-  salary: z.string().optional().transform((val) => (val ? parseFloat(val) : undefined)).pipe(z.number().min(0, "Salary must be positive").optional()),
+  salary: z.string().optional(),
   joinedDate: z.string().min(1, "Joined date is required").regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format"),
 });
 
@@ -43,6 +43,7 @@ export default function AddEmployeePage() {
       department: "Engineering",
       phone: "",
       status: "Active",
+      salary: "",
       joinedDate: new Date().toISOString().split("T")[0],
     },
   });
@@ -57,7 +58,7 @@ export default function AddEmployeePage() {
         department: data.department,
         phone: data.phone || undefined,
         status: data.status,
-        salary: data.salary,
+        salary: data.salary ? parseFloat(data.salary) : undefined,
         joinedDate: data.joinedDate,
       });
 
