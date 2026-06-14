@@ -3,6 +3,15 @@ const { ZodError } = require("zod");
 function errorHandler(err, req, res, _next) {
   console.error(`[ERROR] ${req.method} ${req.path}:`, err.message);
 
+  // Mongoose duplicate key error
+  if (err.code === 11000) {
+    const field = Object.keys(err.keyValue || {})[0] || "field";
+    return res.status(409).json({
+      success: false,
+      error: `Duplicate value provided for ${field} (Already Exists)`,
+    });
+  }
+
   // Zod validation error
   if (err instanceof ZodError) {
     const formatted = err.errors.map((e) => ({

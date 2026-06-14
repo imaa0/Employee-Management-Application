@@ -136,8 +136,18 @@ router.post("/", async (req, res, next) => {
       return res.status(409).json({ success: false, error: "An employee with this email already exists" });
     }
 
-    const allEmps = await Employee.find();
-    let nextIdNum = allEmps.length + 1;
+    const allEmps = await Employee.find({}, { id: 1 });
+    let maxIdNum = 0;
+    allEmps.forEach((emp) => {
+      if (emp.id && emp.id.startsWith("EMP-")) {
+        const num = parseInt(emp.id.replace("EMP-", ""), 10);
+        if (!isNaN(num) && num > maxIdNum) {
+          maxIdNum = num;
+        }
+      }
+    });
+
+    const nextIdNum = maxIdNum + 1;
     
     const newEmployee = new Employee({
       id: `EMP-${String(nextIdNum).padStart(3, "0")}`,
