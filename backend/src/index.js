@@ -1,5 +1,6 @@
 require("dotenv").config();
 const express = require("express");
+const cors = require("cors");
 const { connectDB } = require("./lib/db");
 const authRoutes = require("./routes/auth");
 const employeeRoutes = require("./routes/employees");
@@ -8,21 +9,14 @@ const { errorHandler } = require("./middleware/errorHandler");
 const app = express();
 
 // ── CORS (must come first, even before body parsers) ─────────────────────────
-app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "GET, POST, PUT, DELETE, OPTIONS, PATCH"
-  );
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Content-Type, Authorization, X-Requested-With, Accept"
-  );
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
-  next();
-});
+const corsOptions = {
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
+  maxAge: 86400,
+};
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions)); // handle preflight for all routes
 
 // ── DB connection middleware ──────────────────────────────────────────────────
 // On Vercel every request may hit a cold start; we must await the connection
