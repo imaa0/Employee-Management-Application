@@ -18,6 +18,23 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions)); // handle preflight for all routes
 
+// ── Health check (before DB middleware so it always responds) ────────────────
+app.get("/api/health", (req, res) => {
+  res.json({
+    status: "ok",
+    message: "WorkMate EMS API is running",
+    timestamp: new Date().toISOString(),
+    env: {
+      hasMongoUri: !!process.env.MONGODB_URI,
+      hasJwtSecret: !!process.env.JWT_SECRET,
+    },
+  });
+});
+
+// ── Body parsers ──────────────────────────────────────────────────────────────
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
+
 // ── DB connection middleware ──────────────────────────────────────────────────
 // On Vercel every request may hit a cold start; we must await the connection
 // before any route handler runs. The connectDB function caches the connection
@@ -30,27 +47,15 @@ app.use(async (req, res, next) => {
     console.error("❌ DB connection failed:", err.message);
     res.status(503).json({
       success: false,
-      error: "Database unavailable – please try again shortly",
+      error: "Database unavailable",
+      detail: err.message, // visible in browser for debugging
     });
   }
 });
 
-// ── Body parsers ──────────────────────────────────────────────────────────────
-app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({ limit: "50mb", extended: true }));
-
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.use("/api/auth", authRoutes);
 app.use("/api/employees", employeeRoutes);
-
-// ── Health check ──────────────────────────────────────────────────────────────
-app.get("/api/health", (req, res) => {
-  res.json({
-    status: "ok",
-    message: "WorkMate EMS API is running",
-    timestamp: new Date().toISOString(),
-  });
-});
 
 // ── Error handler ─────────────────────────────────────────────────────────────
 app.use(errorHandler);
