@@ -1,3 +1,8 @@
+// Import app at the top level so Vercel's static bundler (ncc) includes
+// the entire src/ directory in the deployment. If require() is inside a
+// function/try-catch, ncc won't trace it and the module won't be deployed.
+const app = require("../src/index.js");
+
 function setCorsHeaders(res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
@@ -6,10 +11,9 @@ function setCorsHeaders(res) {
 }
 
 // Vercel Serverless entry point.
-// CORS headers are set immediately — before any require() or async work —
-// so even platform-level timeouts/crashes return browser-readable errors.
+// CORS headers are set immediately — before Express runs —
+// so even crashes return browser-readable errors.
 module.exports = async (req, res) => {
-  // Always set CORS first, no matter what happens next
   setCorsHeaders(res);
 
   if (req.method === "OPTIONS") {
@@ -17,9 +21,7 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const app = require("../src/index.js");
     return await new Promise((resolve, reject) => {
-      // Wrap in a promise so async errors are caught
       try {
         const result = app(req, res);
         if (result && typeof result.then === "function") {
@@ -33,9 +35,8 @@ module.exports = async (req, res) => {
     });
   } catch (error) {
     console.error("API handler failed:", error);
-    // CORS headers already set above — safe to respond
     if (!res.headersSent) {
-      setCorsHeaders(res); // re-set in case something cleared them
+      setCorsHeaders(res);
       return res.status(500).json({
         success: false,
         error: "HANDLER_FAILURE",
